@@ -1,0 +1,66 @@
+function onOpen() {
+  var ui = SlidesApp.getUi();
+  ui.createMenu('Custom Menu')
+    .addItem('Create Talking Points', 'generateTalkingPoints')
+    .addToUi();
+}
+
+function generateTalkingPoints() {
+  // Get the slide content
+  var presentation = SlidesApp.getActivePresentation();
+  var slides = presentation.getSlides();
+
+  slides.forEach(function(slide) {
+    var notesPage = slide.getNotesPage();
+    var speakerNotesShape = notesPage.getSpeakerNotesShape();
+    var slideText = getSlideText(slide);
+
+    // Make an HTTP POST request to the ChatGPT API
+    var apiKey = "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"; // Replace with your ChatGPT API key
+    var model = "gpt-3.5-turbo"; // Update with the latest model name
+
+    var endpointUrl = "https://api.openai.com/v1/chat/completions";
+
+    var headers = {
+      "Authorization": "Bearer " + apiKey,
+      "Content-Type": "application/json"
+    };
+
+    var prompt = "Create talking points for 30 seconds of talking. The talking point should be in complete prose format; should not include greetings for every slide; and should offer aan one line overview of the message in the sky, followed by two to three sentences higlighting the key point in the text. Whereever possible try and connect the storyline with the previous slide :\n\n" + slideText;
+
+    var payload = {
+      messages: [
+        { role: 'system', content: 'You are a speaker giving a presentation.' },
+        { role: 'user', content: prompt }
+      ],
+      max_tokens: 200,
+      temperature: 0.6,
+      model: model
+    };
+
+    var options = {
+      method: "post",
+      headers: headers,
+      payload: JSON.stringify(payload)
+    };
+
+    var response = UrlFetchApp.fetch(endpointUrl, options);
+    var responseData = JSON.parse(response.getContentText());
+    var talkingPoints = responseData.choices[0].message.content.trim();
+
+    // Update the speaker notes with the talking points
+    speakerNotesShape.getText().setText("ChatGPT Talking Points:\n\n" + talkingPoints);
+  });
+}
+
+function getSlideText(slide) {
+  var shapes = slide.getShapes();
+  var text = "";
+  shapes.forEach(function(shape) {
+    if (shape.getText()) {
+      var shapeText = shape.getText().asString().trim();
+      text += shapeText + "\n";
+    }
+  });
+  return text.trim();
+}
