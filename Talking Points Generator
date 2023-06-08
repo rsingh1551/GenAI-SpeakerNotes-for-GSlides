@@ -16,7 +16,7 @@ function generateTalkingPoints() {
     var slideText = getSlideText(slide);
 
     // Make an HTTP POST request to the ChatGPT API
-    var apiKey = "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"; // Replace with your ChatGPT API key
+    var apiKey = "YOUR KEY"; // Replace with your ChatGPT API key
     var model = "gpt-3.5-turbo"; // Update with the latest model name
 
     var endpointUrl = "https://api.openai.com/v1/chat/completions";
